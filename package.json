@@ -6,7 +6,8 @@
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "start:dist": "node dist/src/index.js"
+    "start:dist": "node dist/src/index.js",
+    "vercel-build": "echo 'No build step required'"
   },
   "repository": {
     "type": "git",
