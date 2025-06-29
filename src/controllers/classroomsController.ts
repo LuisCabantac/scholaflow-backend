@@ -2,12 +2,14 @@ import { desc, eq } from "drizzle-orm";
 import { Request, Response } from "express";
 
 import { db } from "../drizzle";
-import { classroom } from "../drizzle/schema";
+import { classroomType } from "../lib/schema";
 import { validateSession } from "../lib/auth";
+import { classroom, enrolledClass } from "../drizzle/schema";
 
-export async function getAllCreatedClasses(req: Request, res: Response) {
+export async function getAllClasses(req: Request, res: Response) {
   try {
     const { userId } = req.params;
+    const { type: classType } = req.query;
 
     const { isValidSession } = await validateSession(req);
 
@@ -27,23 +29,59 @@ export async function getAllCreatedClasses(req: Request, res: Response) {
       });
     }
 
-    const data = await db
-      .select()
-      .from(classroom)
-      .where(eq(classroom.teacherId, userId))
-      .orderBy(desc(classroom.createdAt));
-
-    if (!data) {
-      return res.status(404).send({
-        message: "Classes not found",
-        error: "Not Found",
-        statusCode: 404,
+    if (!classType) {
+      return res.status(400).send({
+        message: "Class type parameter is required",
+        error: "Bad Request",
+        statusCode: 400,
       });
     }
 
-    return res
-      .status(200)
-      .send({ message: "Classes found", data, statusCode: 200 });
+    const isValidClassType = classroomType.safeParse(classType);
+
+    if (isValidClassType.error) {
+      return res.status(400).send({
+        message: "Invalid class type.",
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
+    if (isValidClassType.data === "created") {
+      const data = await db
+        .select()
+        .from(classroom)
+        .where(eq(classroom.teacherId, userId))
+        .orderBy(desc(classroom.createdAt));
+
+      if (!data.length) {
+        return res
+          .status(200)
+          .send({ message: "No classes found", data: null, statusCode: 200 });
+      }
+
+      return res
+        .status(200)
+        .send({ message: "Classes found", data, statusCode: 200 });
+    }
+
+    if (isValidClassType.data === "enrolled") {
+      const data = await db
+        .select()
+        .from(enrolledClass)
+        .where(eq(enrolledClass.userId, userId))
+        .orderBy(desc(enrolledClass.createdAt));
+
+      if (!data.length) {
+        return res
+          .status(404)
+          .send({ message: "No classes found", data: null, statusCode: 200 });
+      }
+
+      return res
+        .status(200)
+        .send({ message: "Classes found", data, statusCode: 200 });
+    }
   } catch (error) {
     return res.status(500).send({
       message:
