@@ -1,11 +1,11 @@
-import { desc, eq } from "drizzle-orm";
+import { between, desc, eq } from "drizzle-orm";
 import { Request, Response } from "express";
 
 import { db } from "../drizzle";
-import { classroomType } from "../lib/schema";
 import { validateSession } from "../lib/auth";
 import { validateId } from "../lib/validation";
 import { classroom, enrolledClass } from "../drizzle/schema";
+import { classroomType, createClassroomSchema } from "../lib/schema";
 
 export async function getAllClasses(req: Request, res: Response) {
   try {
@@ -147,6 +147,130 @@ export async function getClassByClassId(req: Request, res: Response) {
         error instanceof Error
           ? error.message
           : "There was an error retrieving the classroom data.",
+      error: "Internal Server Error",
+      statusCode: 500,
+    });
+  }
+}
+
+export async function createClassroom(req: Request, res: Response) {
+  try {
+    const {
+      name,
+      subject,
+      section,
+      room,
+      cardBackground,
+      illustrationIndex,
+      code,
+      teacherId,
+      teacherName,
+      teacherImage,
+    } = req.body;
+
+    const newClass = {
+      name,
+      subject,
+      section,
+      room,
+      cardBackground,
+      illustrationIndex,
+      code,
+      teacherId,
+      teacherName,
+      teacherImage,
+    };
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).send({
+        message: "Request body is required",
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
+    const isValidClassroomSchema = createClassroomSchema.safeParse(newClass);
+
+    if (isValidClassroomSchema.error) {
+      return res.status(400).send({
+        message: isValidClassroomSchema.error.issues
+          .map((issue) => issue.message)
+          .join(", "),
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
+    const { isValidSession, userId } = await validateSession(req);
+
+    if (!isValidSession) {
+      return res.status(401).send({
+        message: "Invalid or expired token",
+        error: "Unauthorized",
+        statusCode: 401,
+      });
+    }
+
+    if (teacherId !== userId) {
+      return res.status(403).send({
+        message:
+          "You are not authorized to create a classroom for another teacher",
+        error: "Forbidden",
+        statusCode: 403,
+      });
+    }
+
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const endOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+
+    const classroomsCreatedToday = await db
+      .select()
+      .from(classroom)
+      .where(between(classroom.createdAt, startOfToday, endOfToday));
+
+    const MAX_CLASSROOMS_PER_DAY = 10;
+
+    if (classroomsCreatedToday.length >= MAX_CLASSROOMS_PER_DAY) {
+      return res.status(429).send({
+        message: "Daily classroom creation limit reached",
+        error: "Too Many Requests",
+        statusCode: 429,
+      });
+    }
+
+    const [data] = await db
+      .insert(classroom)
+      .values(isValidClassroomSchema.data)
+      .returning({ id: classroom.id });
+
+    if (!data) {
+      return res.status(500).send({
+        message: "Failed to create classroom. Database operation unsuccessful.",
+        error: "Internal Server Error",
+        statusCode: 500,
+      });
+    }
+
+    return res.status(201).send({
+      message: "Classroom created successfully",
+      data: `/classroom/class/${data.id}`,
+      statusCode: 201,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to create classroom. Please try again.",
       error: "Internal Server Error",
       statusCode: 500,
     });

@@ -1,6 +1,9 @@
 import { Router, Request, Response, NextFunction } from "express";
 
-import { getClassByClassId } from "../controllers/classroomsController";
+import {
+  createClassroom,
+  getClassByClassId,
+} from "../controllers/classroomsController";
 
 const router = Router();
 
@@ -14,5 +17,13 @@ router.get(
     }
   }
 );
+
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await createClassroom(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
