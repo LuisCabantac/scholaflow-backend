@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 import rateLimit from "express-rate-limit";
 
 import userRouter from "./routes/users";
+import emailRouter from "./routes/email";
 import classroomsRouter from "./routes/classrooms";
 import accountsController from "./routes/accounts";
 
@@ -16,6 +17,13 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again later.",
+  headers: true,
+});
+
+const emailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Too many email requests from this IP, please try again later.",
   headers: true,
 });
 
@@ -44,6 +52,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/v1/api/users", userRouter);
+
+app.use("/v1/api/email", emailLimiter, emailRouter);
 
 app.use("/v1/api/accounts", accountsController);
 
