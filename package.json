@@ -8,7 +8,7 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start:dist": "node dist/src/index.js",
-    "vercel-build": "echo 'No build step required'"
+    "vercel-build": "npm run build"
   },
   "repository": {
     "type": "git",
