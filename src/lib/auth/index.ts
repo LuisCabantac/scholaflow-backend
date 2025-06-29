@@ -10,6 +10,7 @@ export async function validateSession(req: Request) {
   if (!authHeader) {
     return {
       isValidSession: false,
+      userId: null,
       message: "No authorization header found",
       error: "Unauthorized",
       statusCode: 401,
@@ -19,6 +20,7 @@ export async function validateSession(req: Request) {
   if (!authHeader.startsWith("Bearer ")) {
     return {
       isValidSession: false,
+      userId: null,
       message: "Invalid authorization header format",
       error: "Unauthorized",
       statusCode: 401,
@@ -36,6 +38,7 @@ export async function validateSession(req: Request) {
     if (!isAuthorized) {
       return {
         isValidSession: false,
+        userId: null,
         message: "Invalid or expired token",
         error: "Unauthorized",
         statusCode: 401,
@@ -44,6 +47,7 @@ export async function validateSession(req: Request) {
 
     return {
       isValidSession: true,
+      userId: isAuthorized.userId,
       message: "Session validated successfully",
       error: null,
       statusCode: 200,
@@ -51,6 +55,7 @@ export async function validateSession(req: Request) {
   } catch (error) {
     return {
       isValidSession: false,
+      userId: null,
       message: "Failed to validate session due to internal error",
       error: "Internal Server Error",
       statusCode: 500,
