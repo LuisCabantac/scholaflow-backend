@@ -108,7 +108,14 @@ export async function sendEmail(req: Request, res: Response) {
       });
     }
 
-    await db.delete(verification).where(eq(verification.identifier, to_email));
+    await db
+      .delete(verification)
+      .where(
+        and(
+          eq(verification.identifier, to_email),
+          eq(verification.type, isValidEmailType.data)
+        )
+      );
 
     const token =
       isValidEmailType.data === "forgot-password" ? nanoid() : uuidv4();
