@@ -11,16 +11,6 @@ export async function getAllClasses(req: Request, res: Response) {
     const { userId } = req.params;
     const { type: classType } = req.query;
 
-    const { isValidSession } = await validateSession(req);
-
-    if (!isValidSession) {
-      return res.status(401).send({
-        message: "Invalid or expired token",
-        error: "Unauthorized",
-        statusCode: 401,
-      });
-    }
-
     if (!userId) {
       return res.status(400).send({
         message: "Id parameter is required",
@@ -44,6 +34,16 @@ export async function getAllClasses(req: Request, res: Response) {
         message: "Invalid class type.",
         error: "Bad Request",
         statusCode: 400,
+      });
+    }
+
+    const { isValidSession } = await validateSession(req);
+
+    if (!isValidSession) {
+      return res.status(401).send({
+        message: "Invalid or expired token",
+        error: "Unauthorized",
+        statusCode: 401,
       });
     }
 
