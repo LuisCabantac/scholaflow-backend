@@ -167,7 +167,10 @@ export async function sendEmail(req: Request, res: Response) {
       }
 
       return res.status(500).send({
-        message: "Failed to send email. Please try again later.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to send email. Please try again later.",
         error: "Internal Server Error",
         statusCode: 500,
       });
@@ -180,7 +183,10 @@ export async function sendEmail(req: Request, res: Response) {
     });
   } catch (error) {
     return res.status(500).send({
-      message: "Failed to send email. Please try again later.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to send email. Please try again later.",
       error: "Internal Server Error",
       statusCode: 500,
     });
