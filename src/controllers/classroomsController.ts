@@ -152,4 +152,3 @@ export async function getClassByClassId(req: Request, res: Response) {
     });
   }
 }
-
