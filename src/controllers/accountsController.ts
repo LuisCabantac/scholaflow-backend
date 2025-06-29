@@ -10,6 +10,14 @@ export async function getAccountByUserId(req: Request, res: Response) {
   try {
     const { userId } = req.params;
 
+    if (!userId) {
+      return res.status(400).send({
+        message: "User ID is required",
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
     const { isValidSession } = await validateSession(req);
 
     if (!isValidSession) {
@@ -17,14 +25,6 @@ export async function getAccountByUserId(req: Request, res: Response) {
         message: "Invalid or expired token",
         error: "Unauthorized",
         statusCode: 401,
-      });
-    }
-
-    if (!userId) {
-      return res.status(400).send({
-        message: "User ID is required",
-        error: "Bad Request",
-        statusCode: 400,
       });
     }
 

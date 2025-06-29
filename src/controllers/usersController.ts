@@ -10,13 +10,24 @@ const emailSchema = z.email();
 
 export async function getUserByEmail(req: Request, res: Response) {
   try {
-    const email = req.query.email;
+    const { email } = req.query;
 
     if (!email) {
       return res.status(400).send({
         message: "Email parameter is required",
         error: "Bad Request",
         statusCode: 400,
+      });
+    }
+
+    const isValidEmail = emailSchema.safeParse(email);
+
+    if (isValidEmail.error) {
+      return res.status(400).send({
+        message: "Invalid email format",
+        error: "Bad Request",
+        statusCode: 400,
+        details: isValidEmail.error.issues,
       });
     }
 
@@ -30,21 +41,10 @@ export async function getUserByEmail(req: Request, res: Response) {
       });
     }
 
-    const isEmail = emailSchema.safeParse(email);
-
-    if (isEmail.error) {
-      return res.status(400).send({
-        message: "Invalid email format",
-        error: "Bad Request",
-        statusCode: 400,
-        details: isEmail.error.issues,
-      });
-    }
-
     const [data] = await db
       .select()
       .from(user)
-      .where(eq(user.email, isEmail.data));
+      .where(eq(user.email, isValidEmail.data));
 
     if (!data) {
       return res.status(404).send({
@@ -73,6 +73,14 @@ export async function getUserById(req: Request, res: Response) {
   try {
     const { userId } = req.params;
 
+    if (!userId) {
+      return res.status(400).send({
+        message: "User ID is required",
+        error: "Bad Request",
+        statusCode: 400,
+      });
+    }
+
     const { isValidSession } = await validateSession(req);
 
     if (!isValidSession) {
@@ -80,14 +88,6 @@ export async function getUserById(req: Request, res: Response) {
         message: "Invalid or expired token",
         error: "Unauthorized",
         statusCode: 401,
-      });
-    }
-
-    if (!userId) {
-      return res.status(400).send({
-        message: "User ID is required",
-        error: "Bad Request",
-        statusCode: 400,
       });
     }
 
