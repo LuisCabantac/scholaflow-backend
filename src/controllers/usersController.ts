@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { Request, Response } from "express";
 
 import { db } from "../drizzle";
-import { session, user } from "../drizzle/schema";
+import { user } from "../drizzle/schema";
+import { validateSession } from "../lib/auth";
 
 const emailSchema = z.email();
 
@@ -16,6 +17,16 @@ export async function getUserByEmail(req: Request, res: Response) {
         message: "Email parameter is required",
         error: "Bad Request",
         statusCode: 400,
+      });
+    }
+
+    const { isValidSession } = await validateSession(req);
+
+    if (!isValidSession) {
+      return res.status(401).send({
+        message: "Invalid or expired token",
+        error: "Unauthorized",
+        statusCode: 401,
       });
     }
 
@@ -62,31 +73,9 @@ export async function getUserById(req: Request, res: Response) {
   try {
     const { userId } = req.params;
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).send({
-        message: "No authorization header found",
-        error: "Unauthorized",
-        statusCode: 401,
-      });
-    }
+    const { isValidSession } = await validateSession(req);
 
-    if (!authHeader.startsWith("Bearer ")) {
-      return res.status(401).send({
-        message: "Invalid authorization header format",
-        error: "Unauthorized",
-        statusCode: 401,
-      });
-    }
-
-    const token = authHeader.substring(7);
-
-    const [isAuthorized] = await db
-      .select()
-      .from(session)
-      .where(eq(session.token, token));
-
-    if (!isAuthorized) {
+    if (!isValidSession) {
       return res.status(401).send({
         message: "Invalid or expired token",
         error: "Unauthorized",
