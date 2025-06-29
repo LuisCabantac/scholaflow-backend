@@ -5,7 +5,7 @@ import { getAllClasses } from "../controllers/classroomsController";
 const router = Router();
 
 router.get(
-  "/:userId",
+  "/:classId",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await getAllClasses(req, res);
