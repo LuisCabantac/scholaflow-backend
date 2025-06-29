@@ -1,5 +1,4 @@
 import { config } from "dotenv";
-import { nanoid } from "nanoid";
 import { v4 as uuidv4 } from "uuid";
 import { Request, Response } from "express";
 import { and, between, eq } from "drizzle-orm";
@@ -109,6 +108,8 @@ export async function sendEmail(req: Request, res: Response) {
     }
 
     await db.delete(verification).where(eq(verification.identifier, to_email));
+
+    const { nanoid } = await import("nanoid");
 
     const token =
       isValidEmailType.data === "forgot-password" ? nanoid() : uuidv4();
