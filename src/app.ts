@@ -10,7 +10,16 @@ import accountsController from "./routes/accounts";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [process.env.FRONTEND_APP_URL!]
+        : [process.env.FRONTEND_APP_URL!, process.env.LOCALHOST_APP_URL ?? ""],
+    credentials: true,
+  })
+);
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(bodyParser.json());
