@@ -1,8 +1,10 @@
 import "dotenv/config";
-import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import helmet from "helmet";
+import express from "express";
 import bodyParser from "body-parser";
+import rateLimit from "express-rate-limit";
 
 import userRouter from "./routes/users";
 import classroomsRouter from "./routes/classrooms";
@@ -10,6 +12,16 @@ import accountsController from "./routes/accounts";
 
 const app = express();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+  headers: true,
+});
+
+app.use(helmet());
+app.use(limiter);
+app.use(morgan("dev"));
 app.use(
   cors({
     origin:
@@ -19,7 +31,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(morgan("dev"));
 app.use(express.json());
 app.use(bodyParser.json());
 
