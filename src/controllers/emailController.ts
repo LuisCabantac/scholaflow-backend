@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { nanoid } from "nanoid";
 import { v4 as uuidv4 } from "uuid";
 import { Request, Response } from "express";
 import { and, between, eq } from "drizzle-orm";
@@ -109,8 +110,6 @@ export async function sendEmail(req: Request, res: Response) {
 
     await db.delete(verification).where(eq(verification.identifier, to_email));
 
-    const { nanoid } = await import("nanoid");
-
     const token =
       isValidEmailType.data === "forgot-password" ? nanoid() : uuidv4();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -167,10 +166,7 @@ export async function sendEmail(req: Request, res: Response) {
       }
 
       return res.status(500).send({
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to send email. Please try again later.",
+        message: "Failed to send email. Please try again later.",
         error: "Internal Server Error",
         statusCode: 500,
       });
@@ -183,10 +179,7 @@ export async function sendEmail(req: Request, res: Response) {
     });
   } catch (error) {
     return res.status(500).send({
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to send email. Please try again later.",
+      message: "Failed to send email. Please try again later.",
       error: "Internal Server Error",
       statusCode: 500,
     });
