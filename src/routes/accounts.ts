@@ -5,7 +5,7 @@ import { getAccountByUserId } from "../controllers/accountsController";
 const router = Router();
 
 router.get(
-  "/accounts/:userId",
+  "/:userId",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await getAccountByUserId(req, res);
