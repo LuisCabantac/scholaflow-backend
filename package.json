@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
+    "@supabase/supabase-js": "^2.50.2",
     "@types/morgan": "^1.9.10",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
