@@ -1,6 +1,9 @@
 import { Router, Request, Response, NextFunction } from "express";
 
-import { getAccountByUserId } from "../controllers/accountsController";
+import {
+  deleteUser,
+  getAccountByUserId,
+} from "../controllers/accountsController";
 
 const router = Router();
 
@@ -14,5 +17,13 @@ router.get(
     }
   }
 );
+
+router.delete("/", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await deleteUser(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

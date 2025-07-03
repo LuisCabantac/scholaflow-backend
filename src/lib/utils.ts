@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 
+import { supabase } from "./supabase";
 import { EmailType } from "./schema";
 
 config({ path: ".env.local" });
@@ -53,4 +54,63 @@ export function generateEmailTemplate(
   }
 
   throw new Error(`Unsupported email type: ${emailType}`);
+}
+
+export async function deleteFilesFromBucket(
+  bucketName: string,
+  filePath: string[]
+) {
+  const { error } = await supabase.storage.from(bucketName).remove(filePath);
+
+  if (error)
+    throw new Error(
+      `${filePath} cannot be deleted from the ${bucketName} bucket`
+    );
+}
+
+export async function deleteFileFromBucket(
+  bucketName: string,
+  filePath: string
+) {
+  const { error } = await supabase.storage.from(bucketName).remove([filePath]);
+
+  if (error)
+    throw new Error(
+      `${filePath} cannot be deleted from the ${bucketName} bucket`
+    );
+}
+
+export function extractImagePath(url: string): string {
+  const match = url.match(/\/([^\/]+)$/);
+  return match ? match[1] : "";
+}
+
+export function extractCommentFilePath(url: string): string {
+  const match = url.match(/\/comments\/(.+)/);
+  return match![1];
+}
+
+export function extractNoteFilePath(url: string): string {
+  const match = url.match(/\/notes\/(.+)/);
+  return match![1];
+}
+
+export function extractAvatarFilePath(url: string): string {
+  const match = url.match(/\/avatars\/(.+)/);
+  return match![1];
+}
+
+export function extractStreamFilePath(url: string): string {
+  const match = url.match(/\/streams\/(.+)/);
+  return match![1];
+}
+
+export function extractClassworkFilePath(url: string): string {
+  const match = url.match(/\/classworks\/(.+)/);
+  return match![1];
+}
+
+export function extractMessagesFilePath(url: string): string {
+  const match = url.match(/\/messages\/(.+)/);
+  return match![1];
 }
