@@ -21,6 +21,7 @@ import {
   extractCommentFilePath,
   extractMessagesFilePath,
 } from "../lib/utils";
+import { deleteAllNotificationsByResourceId } from "./notificationsController";
 
 export async function getAccountByUserId(req: Request, res: Response) {
   try {
@@ -190,10 +191,39 @@ export async function deleteUser(req: Request, res: Response) {
           .where(eq(classroom.id, currentStream.classId));
 
         if (
-          !(currentStream.userId === userId || classroom.teacherId === userId)
+          !(
+            currentStream.userId === userId ||
+            currentClassroom.teacherId === userId
+          )
         ) {
           continue;
         }
+
+        const comments = await db
+          .select()
+          .from(streamComment)
+          .where(eq(streamComment.streamId, currentStream.id));
+
+        const commentIds = comments.map((comment) => comment.id);
+        if (commentIds.length) {
+          for (const id in commentIds) {
+            await deleteAllNotificationsByResourceId(id);
+          }
+        }
+
+        const attachments = comments
+          .map((comment) => comment.attachment)
+          .filter((attachment) => attachment !== null);
+        if (attachments.length) {
+          const filePath = attachments.map((file) =>
+            extractCommentFilePath(file)
+          );
+          await deleteFilesFromBucket("comments", filePath);
+        }
+
+        await db
+          .delete(streamComment)
+          .where(eq(streamComment.streamId, currentStream.id));
       }
 
       await db.delete(stream).where(eq(stream.userId, userId));
